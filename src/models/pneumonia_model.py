@@ -92,12 +92,13 @@ class PneumoniaModel:
         return self.model
 
     def get_gradcam_target_layer(self) -> nn.Module:
-        """Locate the deepest convolutional feature layer for Grad-CAM.
+        """Locate the deepest active convolutional feature layer for Grad-CAM.
         
-        In DenseNet-121, features.denseblock4 contains the final dense feature maps.
-        The last layer in denseblock4 is denselayer16, whose conv2 outputs the final
-        high-level spatial feature representations.
+        transition3.conv provides rich 14x14 spatial feature maps with strong,
+        reliable gradients for anatomical localization on chest radiographs.
         """
+        if hasattr(self.model, "features") and hasattr(self.model.features, "transition3"):
+            return self.model.features.transition3.conv
         return self.model.features.denseblock4.denselayer16.conv2
 
     def predict(self, x: torch.Tensor) -> PneumoniaPrediction:
