@@ -49,11 +49,32 @@ render_html("""
     /* Google Fonts & Base Typography */
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
     
-    html, body, [class*="css"], [class*="st-"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        color: #0F172A !important;
+    html, body, button, input, select, textarea {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     
+    /* PRESERVE STREAMLIT MATERIAL ICONS - NEVER OVERRIDE THEIR FONT */
+    .material-symbols-rounded,
+    .material-symbols-outlined,
+    [data-testid="stIconMaterial"],
+    span[data-testid="stIconMaterial"],
+    i[data-testid="stIconMaterial"],
+    [data-testid="stSidebarCollapseButton"] span,
+    [data-testid="stFileUploader"] span[data-testid="stIconMaterial"],
+    button span[translate="no"] {
+        font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Icons' !important;
+        font-style: normal !important;
+        font-weight: normal !important;
+        letter-spacing: normal !important;
+        text-transform: none !important;
+        display: inline-block !important;
+        white-space: nowrap !important;
+        word-wrap: normal !important;
+        direction: ltr !important;
+        -webkit-font-feature-settings: 'liga' !important;
+        -webkit-font-smoothing: antialiased !important;
+    }
+
     /* Calming clinical digital health background */
     .stApp, [data-testid="stAppViewContainer"] {
         background-color: #F8FAFC !important;
@@ -65,11 +86,6 @@ render_html("""
         backdrop-filter: blur(10px) !important;
     }
 
-    /* Ensure ALL standard text elements are dark and clearly visible without hover */
-    p, span, label, li, h1, h2, h3, h4, h5, h6, div {
-        color: #0F172A;
-    }
-    
     /* Streamlit Tab Buttons - Always Bold, Dark Charcoal, Never Invisible */
     div[data-testid="stTabs"] {
         margin-top: 0.5rem !important;
@@ -118,16 +134,16 @@ render_html("""
         color: #1E293B !important;
     }
 
-    /* Top Navigation / Hero Header */
+    /* Top Navigation / Hero Header - BRIGHT WHITE AND SOFT BLUE ON NAVY */
     .portal-header {
         background: linear-gradient(135deg, #0A2540 0%, #1E3A8A 100%) !important;
         border-radius: 16px !important;
-        padding: 2rem 2.25rem !important;
+        padding: 2.25rem 2.5rem !important;
         margin-bottom: 1.75rem !important;
         color: #FFFFFF !important;
         box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05) !important;
     }
-    .portal-badge {
+    .portal-header .portal-badge {
         display: inline-flex !important;
         align-items: center !important;
         gap: 0.4rem !important;
@@ -141,18 +157,21 @@ render_html("""
         margin-bottom: 0.75rem !important;
         letter-spacing: 0.02em !important;
     }
-    .portal-title {
-        font-size: 2.15rem !important;
+    .portal-header .portal-badge * {
+        color: #E0F2FE !important;
+    }
+    .portal-header .portal-title {
+        font-size: 2.2rem !important;
         font-weight: 800 !important;
         color: #FFFFFF !important;
         line-height: 1.2 !important;
         margin: 0 !important;
         letter-spacing: -0.02em !important;
     }
-    .portal-subtitle {
-        font-size: 1.02rem !important;
+    .portal-header .portal-subtitle {
+        font-size: 1.05rem !important;
         font-weight: 400 !important;
-        color: #BFDBFE !important;
+        color: #93C5FD !important;
         margin-top: 0.5rem !important;
         max-width: 780px !important;
         line-height: 1.55 !important;
@@ -195,29 +214,30 @@ render_html("""
         font-size: 0.9rem !important;
     }
 
-    /* Upload Panel */
-    .upload-card {
+    /* Streamlit File Uploader Clean Native Appearance */
+    [data-testid="stFileUploader"] {
+        width: 100% !important;
+    }
+    [data-testid="stFileUploaderDropzone"] {
         background-color: #FFFFFF !important;
-        border: 2px dashed #CBD5E1 !important;
+        border: 2px dashed #94A3B8 !important;
         border-radius: 14px !important;
         padding: 1.5rem !important;
-        text-align: center !important;
-        margin-bottom: 1.5rem !important;
-        transition: all 0.2s ease !important;
     }
-    .upload-card:hover {
+    [data-testid="stFileUploaderDropzone"]:hover {
         border-color: #0284C7 !important;
         background-color: #F8FAFC !important;
     }
-    .upload-heading {
-        font-size: 1.15rem !important;
+    [data-testid="stFileUploaderDropzone"] button {
+        background-color: #0284C7 !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 8px !important;
         font-weight: 700 !important;
-        color: #0F172A !important;
-        margin-bottom: 0.35rem !important;
+        padding: 0.5rem 1.25rem !important;
     }
-    .upload-sub {
-        font-size: 0.88rem !important;
-        color: #475569 !important;
+    [data-testid="stFileUploaderDropzone"] button * {
+        color: #FFFFFF !important;
     }
 
     /* Screening Status Cards */
@@ -829,12 +849,8 @@ def main():
     sample_file_name = None
 
     if sample_choice == "Upload My Own X-Ray":
-        render_html("""
-        <div class="upload-card">
-            <div class="upload-heading">Select or Drag & Drop Your Chest X-Ray</div>
-            <div class="upload-sub">Supports hospital DICOM files (.dcm) as well as standard images (.png, .jpg, .jpeg)</div>
-        </div>
-        """)
+        st.markdown('<h3 style="font-size:1.25rem; font-weight:800; color:#0F172A; margin-bottom:0.25rem;">📂 Upload Your Chest X-Ray</h3>', unsafe_allow_html=True)
+        st.markdown('<p style="font-size:0.88rem; color:#475569; margin-bottom:0.75rem;">Supports hospital DICOM files (<code>.dcm</code>) as well as standard images (<code>.png</code>, <code>.jpg</code>, <code>.jpeg</code>)</p>', unsafe_allow_html=True)
 
         uploaded_file = st.file_uploader(
             "Upload chest radiograph file",
@@ -1118,7 +1134,7 @@ def main():
         '</div>'
     )
     render_html(footer_html)
-
+    
 
 if __name__ == "__main__":
     main()
