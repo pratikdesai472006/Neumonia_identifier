@@ -143,13 +143,24 @@ render_html("""
         color: #FFFFFF !important;
         box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05) !important;
     }
+    .portal-header,
+    .portal-header *,
+    .portal-header h1,
+    .portal-header .portal-title,
+    h1.portal-title,
+    div.portal-header h1,
+    div[data-testid="stMarkdownContainer"] div.portal-header h1 {
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
     .portal-header .portal-badge {
         display: inline-flex !important;
         align-items: center !important;
         gap: 0.4rem !important;
-        background-color: rgba(255, 255, 255, 0.15) !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        background-color: rgba(255, 255, 255, 0.18) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
         color: #E0F2FE !important;
+        -webkit-text-fill-color: #E0F2FE !important;
         font-size: 0.8rem !important;
         font-weight: 600 !important;
         padding: 0.25rem 0.75rem !important;
@@ -157,21 +168,21 @@ render_html("""
         margin-bottom: 0.75rem !important;
         letter-spacing: 0.02em !important;
     }
-    .portal-header .portal-badge * {
-        color: #E0F2FE !important;
-    }
     .portal-header .portal-title {
         font-size: 2.2rem !important;
         font-weight: 800 !important;
         color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
         line-height: 1.2 !important;
         margin: 0 !important;
         letter-spacing: -0.02em !important;
     }
-    .portal-header .portal-subtitle {
+    .portal-header .portal-subtitle,
+    div.portal-header .portal-subtitle {
         font-size: 1.05rem !important;
         font-weight: 400 !important;
-        color: #93C5FD !important;
+        color: #BAE6FD !important;
+        -webkit-text-fill-color: #BAE6FD !important;
         margin-top: 0.5rem !important;
         max-width: 780px !important;
         line-height: 1.55 !important;
@@ -770,12 +781,12 @@ def get_clinical_guidance(score: float, is_positive: bool) -> Dict[str, Any]:
 def main():
     # 1. Top Portal Header
     render_html("""
-    <div class="portal-header">
-        <div class="portal-badge">
+    <div class="portal-header" style="background: linear-gradient(135deg, #0A2540 0%, #1E3A8A 100%) !important; border-radius: 16px !important; padding: 2.25rem 2.5rem !important; margin-bottom: 1.75rem !important; color: #FFFFFF !important;">
+        <div class="portal-badge" style="display: inline-flex !important; align-items: center !important; gap: 0.4rem !important; background-color: rgba(255, 255, 255, 0.18) !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; color: #E0F2FE !important; font-size: 0.8rem !important; font-weight: 600 !important; padding: 0.25rem 0.75rem !important; border-radius: 9999px !important; margin-bottom: 0.75rem !important;">
             <span>🛡️</span> Secure & Private • Local Offline Analysis
         </div>
-        <h1 class="portal-title">PneumoVision — Chest X-Ray Screening & Health Guide</h1>
-        <div class="portal-subtitle">
+        <h1 class="portal-title" style="color: #FFFFFF !important; -webkit-text-fill-color: #FFFFFF !important; font-size: 2.2rem !important; font-weight: 800 !important; line-height: 1.2 !important; margin: 0.25rem 0 0.5rem 0 !important; letter-spacing: -0.02em !important;">PneumoVision — Chest X-Ray Screening & Health Guide</h1>
+        <div class="portal-subtitle" style="color: #BAE6FD !important; -webkit-text-fill-color: #BAE6FD !important; font-size: 1.05rem !important; font-weight: 400 !important; line-height: 1.55 !important; margin-top: 0.5rem !important; max-width: 780px !important;">
             Instant, automated chest radiograph screening designed for patients. View specific affected 
             lung areas and receive tailored doctor visiting advice and home care recommendations.
         </div>
