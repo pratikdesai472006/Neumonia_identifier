@@ -1,0 +1,35 @@
+{
+    "random_seed": 42,
+    "split_ratios": {
+        "train": 0.7,
+        "val": 0.15,
+        "test": 0.15
+    },
+    "source_csv": "E:\\CV_OEP\\dataset\\stage_2_train_labels.csv",
+    "total_patients": 26684,
+    "leakage_check": "PASSED",
+    "splits": {
+        "train": {
+            "total": 18678,
+            "positive": 4208,
+            "negative": 14470,
+            "positive_pct": 22.53,
+            "negative_pct": 77.47
+        },
+        "val": {
+            "total": 4003,
+            "positive": 902,
+            "negative": 3101,
+            "positive_pct": 22.53,
+            "negative_pct": 77.47
+        },
+        "test": {
+            "total": 4003,
+            "positive": 902,
+            "negative": 3101,
+            "positive_pct": 22.53,
+            "negative_pct": 77.47
+        }
+    },
+    "label_derivation": "patient_label = max(Target) per patientId \u2014 consistent with analyze_dataset.py Phase 1 methodology."
+}

@@ -1,0 +1,71 @@
+{
+    "dataset_csv": "E:\\CV_OEP\\dataset\\stage_2_train_labels.csv",
+    "total_annotation_rows": 30227,
+    "columns": [
+        "patientId",
+        "x",
+        "y",
+        "width",
+        "height",
+        "Target"
+    ],
+    "missing_values_per_column": {
+        "patientId": 0,
+        "x": 20672,
+        "y": 20672,
+        "width": 20672,
+        "height": 20672,
+        "Target": 0
+    },
+    "row_level_distribution": {
+        "negative_rows (Target=0)": 20672,
+        "positive_rows (Target=1)": 9555
+    },
+    "image_level_distribution": {
+        "total_unique_images": 26684,
+        "positive_images (Pneumonia)": 6012,
+        "negative_images (No Pneumonia)": 20672,
+        "positive_percentage": 22.53,
+        "negative_percentage": 77.47,
+        "class_imbalance_ratio (Negative : Positive)": "3.44 : 1",
+        "has_conflicting_targets_per_patient": false
+    },
+    "annotation_multiplicity": {
+        "exact_duplicate_rows": 0,
+        "boxes_per_patient_distribution_all": {
+            "1": 23286,
+            "2": 3266,
+            "3": 119,
+            "4": 13
+        },
+        "boxes_per_positive_patient_distribution": {
+            "1": 2614,
+            "2": 3266,
+            "3": 119,
+            "4": 13
+        },
+        "bbox_geometry_stats": {
+            "total_bounding_boxes": 9555,
+            "mean_width": 218.4713762428048,
+            "std_width": 59.2894752885172,
+            "min_width": 40.0,
+            "max_width": 528.0,
+            "mean_height": 329.2697017268446,
+            "std_height": 157.7507546886572,
+            "min_height": 45.0,
+            "max_height": 942.0,
+            "mean_area": 77523.44803767662,
+            "median_area": 64829.0
+        }
+    },
+    "storage_and_system": {
+        "drive": "E:",
+        "drive_total_gb": 341.8,
+        "drive_used_gb": 54.59,
+        "drive_free_gb": 287.2,
+        "required_training_dicom_files": 26684,
+        "estimated_avg_file_size_kb": 150.0,
+        "estimated_dataset_size_gb": 3.82,
+        "disk_space_sufficient": true
+    }
+}

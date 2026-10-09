@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Environment variables & credentials
+.env
+.env.*
+kaggle.json
+*.pem
+*.key
+
+# Kaggle cache & downloads
+kaggle_cache/
+*.zip
+*.tar.gz
+
+# Dataset (DICOM files are large; keep CSV and splits metadata)
+dataset/stage_2_train_images/
+dataset/stage_2_test_images/
+dataset/raw/images/
+dataset/*.zip
+
+# Model checkpoints & large weights
+checkpoints/*.pth
+checkpoints/*.pt
+checkpoints/*.onnx
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

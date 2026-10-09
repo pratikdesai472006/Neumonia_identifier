@@ -1,0 +1,38 @@
+======================================================================
+RSNA PNEUMONIA DETECTION CHALLENGE - PHASE 1 DATASET ANALYSIS
+======================================================================
+
+Dataset CSV: E:\CV_OEP\dataset\stage_2_train_labels.csv
+Total Annotation Rows: 30,227
+Columns: patientId, x, y, width, height, Target
+
+--------------------------------------------------
+1. IMAGE-LEVEL BINARY CLASSIFICATION METRICS
+--------------------------------------------------
+Unique Patient / Image IDs: 26,684
+Positive Images (Target=1, Pneumonia):    6,012 (22.53%)
+Negative Images (Target=0, No Pneumonia): 20,672 (77.47%)
+Class Imbalance Ratio (Neg : Pos):        3.44 : 1
+Conflicting Target Rows per Patient:       False
+
+--------------------------------------------------
+2. ANNOTATION MULTIPLICITY & BOUNDING BOX BEHAVIOR
+--------------------------------------------------
+Exact Duplicate Rows in CSV: 0
+Bounding boxes per positive patient:
+  - 1 box(es): 2,614 patients (43.48%)
+  - 2 box(es): 3,266 patients (54.32%)
+  - 3 box(es): 119 patients (1.98%)
+  - 4 box(es): 13 patients (0.22%)
+Total positive bounding box annotations: 9,555
+Average box size: width=218.5px, height=329.3px
+
+--------------------------------------------------
+3. STORAGE & DISK CAPACITY
+--------------------------------------------------
+Target Drive: E:
+Available Free Space on E:: 287.20 GB
+Required Training DICOM Files:  26,684 files
+Estimated Dataset Size:         ~3.82 GB (~3908.8 MB)
+Storage Status:                 SUFFICIENT (AMPLE SPACE)
+======================================================================
