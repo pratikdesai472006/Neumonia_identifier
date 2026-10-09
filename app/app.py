@@ -7,6 +7,7 @@ providing localized lung area visualization and personalized doctor visiting adv
 import io
 from pathlib import Path
 import sys
+import textwrap
 from typing import List, Optional, Tuple, Dict, Any
 
 import cv2
@@ -35,362 +36,369 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-st.markdown("""
+
+def render_html(html_str: str):
+    """Safely render HTML without accidental markdown 4-space code block conversion."""
+    st.markdown(textwrap.dedent(html_str).strip(), unsafe_allow_html=True)
+
+
+render_html("""
 <style>
     /* Google Fonts & Base Typography */
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-        color: #0F172A;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        color: #0F172A !important;
     }
     
     /* Calming clinical digital health background */
     .stApp {
-        background-color: #F8FAFC;
+        background-color: #F8FAFC !important;
     }
 
     header[data-testid="stHeader"] {
-        background-color: rgba(248, 250, 252, 0.95);
-        backdrop-filter: blur(10px);
+        background-color: rgba(248, 250, 252, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
     }
 
     /* Top Navigation / Hero Header */
     .portal-header {
-        background: linear-gradient(135deg, #0A2540 0%, #1E3A8A 100%);
-        border-radius: 16px;
-        padding: 2rem 2.25rem;
-        margin-bottom: 1.75rem;
-        color: #FFFFFF;
-        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+        background: linear-gradient(135deg, #0A2540 0%, #1E3A8A 100%) !important;
+        border-radius: 16px !important;
+        padding: 2rem 2.25rem !important;
+        margin-bottom: 1.75rem !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05) !important;
     }
     .portal-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        background-color: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        color: #E0F2FE;
-        font-size: 0.8rem;
-        font-weight: 600;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        margin-bottom: 0.75rem;
-        letter-spacing: 0.02em;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        color: #E0F2FE !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        padding: 0.25rem 0.75rem !important;
+        border-radius: 9999px !important;
+        margin-bottom: 0.75rem !important;
+        letter-spacing: 0.02em !important;
     }
     .portal-title {
-        font-size: 2.15rem;
-        font-weight: 800;
-        color: #FFFFFF;
-        line-height: 1.2;
-        margin: 0;
-        letter-spacing: -0.02em;
+        font-size: 2.15rem !important;
+        font-weight: 800 !important;
+        color: #FFFFFF !important;
+        line-height: 1.2 !important;
+        margin: 0 !important;
+        letter-spacing: -0.02em !important;
     }
     .portal-subtitle {
-        font-size: 1.02rem;
-        font-weight: 400;
-        color: #93C5FD;
-        margin-top: 0.5rem;
-        max-width: 780px;
-        line-height: 1.55;
+        font-size: 1.02rem !important;
+        font-weight: 400 !important;
+        color: #93C5FD !important;
+        margin-top: 0.5rem !important;
+        max-width: 780px !important;
+        line-height: 1.55 !important;
     }
 
     /* Workflow Steps Card */
     .flow-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 0.85rem 1.25rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px !important;
+        padding: 0.85rem 1.25rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        margin-bottom: 1.5rem !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
     }
     .flow-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.88rem;
-        font-weight: 600;
-        color: #334155;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        font-size: 0.88rem !important;
+        font-weight: 600 !important;
+        color: #334155 !important;
     }
     .flow-num {
-        background-color: #E0F2FE;
-        color: #0284C7;
-        font-weight: 800;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.75rem;
+        background-color: #E0F2FE !important;
+        color: #0284C7 !important;
+        font-weight: 800 !important;
+        width: 24px !important;
+        height: 24px !important;
+        border-radius: 50% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 0.75rem !important;
     }
     .flow-arrow {
-        color: #94A3B8;
-        font-size: 0.9rem;
+        color: #94A3B8 !important;
+        font-size: 0.9rem !important;
     }
 
     /* Upload Panel */
     .upload-card {
-        background-color: #FFFFFF;
-        border: 2px dashed #CBD5E1;
-        border-radius: 14px;
-        padding: 1.5rem;
-        text-align: center;
-        margin-bottom: 1.5rem;
-        transition: all 0.2s ease;
+        background-color: #FFFFFF !important;
+        border: 2px dashed #CBD5E1 !important;
+        border-radius: 14px !important;
+        padding: 1.5rem !important;
+        text-align: center !important;
+        margin-bottom: 1.5rem !important;
+        transition: all 0.2s ease !important;
     }
     .upload-card:hover {
-        border-color: #0284C7;
-        background-color: #F8FAFC;
+        border-color: #0284C7 !important;
+        background-color: #F8FAFC !important;
     }
     .upload-heading {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin-bottom: 0.35rem;
+        font-size: 1.15rem !important;
+        font-weight: 700 !important;
+        color: #0F172A !important;
+        margin-bottom: 0.35rem !important;
     }
     .upload-sub {
-        font-size: 0.88rem;
-        color: #64748B;
+        font-size: 0.88rem !important;
+        color: #64748B !important;
     }
 
     /* Screening Status Cards */
     .status-card-normal {
-        background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
-        border: 1px solid #6EE7B7;
-        border-radius: 14px;
-        padding: 1.5rem 1.75rem;
-        color: #065F46;
-        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%) !important;
+        border: 1px solid #6EE7B7 !important;
+        border-radius: 14px !important;
+        padding: 1.5rem 1.75rem !important;
+        color: #065F46 !important;
+        margin-bottom: 1.5rem !important;
     }
     .status-card-positive {
-        background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
-        border: 1px solid #FCA5A5;
-        border-radius: 14px;
-        padding: 1.5rem 1.75rem;
-        color: #991B1B;
-        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%) !important;
+        border: 1px solid #FCA5A5 !important;
+        border-radius: 14px !important;
+        padding: 1.5rem 1.75rem !important;
+        color: #991B1B !important;
+        margin-bottom: 1.5rem !important;
     }
     .status-eyebrow {
-        font-size: 0.8rem;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin-bottom: 0.35rem;
+        font-size: 0.8rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.06em !important;
+        text-transform: uppercase !important;
+        margin-bottom: 0.35rem !important;
     }
     .status-heading {
-        font-size: 1.65rem;
-        font-weight: 800;
-        line-height: 1.25;
-        margin-bottom: 0.4rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+        font-size: 1.65rem !important;
+        font-weight: 800 !important;
+        line-height: 1.25 !important;
+        margin-bottom: 0.4rem !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
     }
     .status-desc {
-        font-size: 0.95rem;
-        font-weight: 500;
-        line-height: 1.5;
-        opacity: 0.95;
+        font-size: 0.95rem !important;
+        font-weight: 500 !important;
+        line-height: 1.5 !important;
+        opacity: 0.95 !important;
     }
 
     /* Risk Score Gauge & Metrics */
     .metric-panel {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 14px;
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 14px !important;
+        padding: 1.25rem 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
     }
     .metric-title {
-        font-size: 0.82rem;
-        font-weight: 700;
-        color: #64748B;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.35rem;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        color: #64748B !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        margin-bottom: 0.35rem !important;
     }
     .metric-number {
-        font-size: 1.85rem;
-        font-weight: 800;
-        color: #0F172A;
+        font-size: 1.85rem !important;
+        font-weight: 800 !important;
+        color: #0F172A !important;
     }
     .metric-note {
-        font-size: 0.82rem;
-        color: #64748B;
-        margin-top: 0.25rem;
+        font-size: 0.82rem !important;
+        color: #64748B !important;
+        margin-top: 0.25rem !important;
     }
 
     /* Doctor Advice & Recommendations Box */
     .advice-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 16px;
-        padding: 1.75rem;
-        margin-top: 1.25rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 16px !important;
+        padding: 1.75rem !important;
+        margin-top: 1.25rem !important;
+        margin-bottom: 1.5rem !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+        color: #0F172A !important;
     }
     .advice-header {
-        display: flex;
-        align-items: center;
-        gap: 0.65rem;
-        margin-bottom: 1.25rem;
-        border-bottom: 1px solid #F1F5F9;
-        padding-bottom: 0.85rem;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.65rem !important;
+        margin-bottom: 1.25rem !important;
+        border-bottom: 1px solid #F1F5F9 !important;
+        padding-bottom: 0.85rem !important;
     }
     .advice-icon {
-        font-size: 1.5rem;
+        font-size: 1.5rem !important;
     }
     .advice-title {
-        font-size: 1.22rem;
-        font-weight: 800;
-        color: #0F172A;
-        margin: 0;
+        font-size: 1.25rem !important;
+        font-weight: 800 !important;
+        color: #0F172A !important;
+        margin: 0 !important;
     }
     .advice-timeline-badge {
-        margin-left: auto;
-        padding: 0.3rem 0.85rem;
-        border-radius: 9999px;
-        font-size: 0.8rem;
-        font-weight: 700;
+        margin-left: auto !important;
+        padding: 0.3rem 0.85rem !important;
+        border-radius: 9999px !important;
+        font-size: 0.8rem !important;
+        font-weight: 700 !important;
     }
     .timeline-routine {
-        background-color: #ECFDF5;
-        color: #059669;
-        border: 1px solid #A7F3D0;
+        background-color: #ECFDF5 !important;
+        color: #059669 !important;
+        border: 1px solid #A7F3D0 !important;
     }
     .timeline-moderate {
-        background-color: #FEF3C7;
-        color: #D97706;
-        border: 1px solid #FDE68A;
+        background-color: #FEF3C7 !important;
+        color: #D97706 !important;
+        border: 1px solid #FDE68A !important;
     }
     .timeline-urgent {
-        background-color: #FEE2E2;
-        color: #DC2626;
-        border: 1px solid #FCA5A5;
+        background-color: #FEE2E2 !important;
+        color: #DC2626 !important;
+        border: 1px solid #FCA5A5 !important;
     }
 
     .advice-section {
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.25rem !important;
     }
     .advice-sec-title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #1E293B;
-        margin-bottom: 0.45rem;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
+        font-size: 0.96rem !important;
+        font-weight: 700 !important;
+        color: #1E293B !important;
+        margin-bottom: 0.45rem !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
     }
     .advice-sec-text {
-        font-size: 0.9rem;
-        color: #475569;
-        line-height: 1.6;
-        margin: 0;
+        font-size: 0.91rem !important;
+        color: #334155 !important;
+        line-height: 1.6 !important;
+        margin: 0 !important;
     }
 
     /* Red Flags Warning Box */
     .red-flag-box {
-        background-color: #FFF1F2;
-        border-left: 4px solid #E11D48;
-        border-radius: 8px;
-        padding: 1rem 1.25rem;
-        margin-top: 1rem;
+        background-color: #FFF1F2 !important;
+        border-left: 4px solid #E11D48 !important;
+        border-radius: 8px !important;
+        padding: 1.15rem 1.35rem !important;
+        margin-top: 1rem !important;
     }
     .red-flag-title {
-        font-size: 0.88rem;
-        font-weight: 800;
-        color: #9F1239;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        margin-bottom: 0.35rem;
+        font-size: 0.92rem !important;
+        font-weight: 800 !important;
+        color: #9F1239 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
+        margin-bottom: 0.45rem !important;
     }
     .red-flag-list {
-        font-size: 0.84rem;
-        color: #881337;
-        margin: 0;
-        padding-left: 1.2rem;
-        line-height: 1.5;
+        font-size: 0.86rem !important;
+        color: #881337 !important;
+        margin: 0 !important;
+        padding-left: 1.2rem !important;
+        line-height: 1.55 !important;
     }
 
     /* Detected Zone Pill Tags */
     .zone-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        background-color: #EFF6FF;
-        border: 1px solid #BFDBFE;
-        color: #1D4ED8;
-        font-size: 0.82rem;
-        font-weight: 600;
-        padding: 0.35rem 0.75rem;
-        border-radius: 8px;
-        margin: 0.25rem 0.25rem 0.25rem 0;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        background-color: #EFF6FF !important;
+        border: 1px solid #BFDBFE !important;
+        color: #1D4ED8 !important;
+        font-size: 0.82rem !important;
+        font-weight: 600 !important;
+        padding: 0.35rem 0.75rem !important;
+        border-radius: 8px !important;
+        margin: 0.25rem 0.25rem 0.25rem 0 !important;
     }
 
     /* Image Display Container */
     .viewer-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 14px;
-        padding: 1rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        margin-bottom: 1rem;
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 14px !important;
+        padding: 1rem !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+        margin-bottom: 1rem !important;
     }
     .viewer-header {
-        font-size: 0.92rem;
-        font-weight: 700;
-        color: #1E293B;
-        margin-bottom: 0.65rem;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
+        font-size: 0.92rem !important;
+        font-weight: 700 !important;
+        color: #1E293B !important;
+        margin-bottom: 0.65rem !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
     }
 
     /* Sidebar Clean Styling */
     .sidebar-block {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 1.15rem;
-        margin-bottom: 1.25rem;
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px !important;
+        padding: 1.15rem !important;
+        margin-bottom: 1.25rem !important;
     }
     .sidebar-block-title {
-        font-size: 0.88rem;
-        font-weight: 800;
-        color: #0F172A;
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
+        font-size: 0.88rem !important;
+        font-weight: 800 !important;
+        color: #0F172A !important;
+        margin-bottom: 0.5rem !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
     }
     .sidebar-block-body {
-        font-size: 0.82rem;
-        color: #475569;
-        line-height: 1.5;
+        font-size: 0.82rem !important;
+        color: #475569 !important;
+        line-height: 1.5 !important;
     }
 
     /* Trust & Disclaimer Footer */
     .trust-footer {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 1.25rem 1.5rem;
-        margin-top: 2rem;
-        margin-bottom: 1.5rem;
-        font-size: 0.82rem;
-        color: #64748B;
-        line-height: 1.5;
-        text-align: center;
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px !important;
+        padding: 1.25rem 1.5rem !important;
+        margin-top: 2rem !important;
+        margin-bottom: 1.5rem !important;
+        font-size: 0.82rem !important;
+        color: #64748B !important;
+        line-height: 1.5 !important;
+        text-align: center !important;
     }
 </style>
-""", unsafe_allow_html=True)
+""")
 
 
 # -----------------------------------------------------------------------------
@@ -474,11 +482,7 @@ def generate_affected_region_overlay(
     heatmap: np.ndarray,
     is_positive: bool,
 ) -> Tuple[Image.Image, List[Dict[str, Any]]]:
-    """Highlight specifically where in the lung the pneumonia opacity is located.
-    
-    Draws smooth illuminated boundary contours around the affected areas,
-    labels the anatomical lung quadrant, and computes the affected area.
-    """
+    """Highlight specifically where in the lung the pneumonia opacity is located."""
     img_rgb = np.array(display_img.convert("RGB"))
     h, w, _ = img_rgb.shape
     
@@ -500,7 +504,7 @@ def generate_affected_region_overlay(
         
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        # Patient-friendly highlighting colors: warm coral fill with luminous cyan border
+        # Patient-friendly highlighting colors
         color_fill = np.array([239, 68, 68], dtype=np.uint8)  # soft clinical red
         color_border = (0, 220, 255)                          # luminous cyan
         
@@ -508,7 +512,6 @@ def generate_affected_region_overlay(
         
         for i, c in enumerate(contours):
             area = cv2.contourArea(c)
-            # Filter negligible pixel noise
             if area > 1000:
                 cv2.drawContours(fill_mask, [c], -1, 255, -1)
                 cv2.drawContours(overlay, [c], -1, color_border, 3)
@@ -516,8 +519,7 @@ def generate_affected_region_overlay(
                 x, y, bw, bh = cv2.boundingRect(c)
                 cx, cy = x + bw // 2, y + bh // 2
                 
-                # Radiograph anatomical orientation:
-                # Left on image is patient's Right Lung; Right on image is patient's Left Lung
+                # Radiograph anatomical orientation
                 side = "Right Lung" if cx < w // 2 else "Left Lung"
                 level = "Upper Field" if cy < h // 3 else ("Mid Field" if cy < 2 * h // 3 else "Lower Field (Base)")
                 zone_name = f"{side} — {level}"
@@ -530,7 +532,6 @@ def generate_affected_region_overlay(
                     "level": level,
                 })
                 
-                # Draw subtle, legible anatomical banner directly above each bounding zone
                 label = f"• {zone_name}"
                 banner_w = len(label) * 10 + 16
                 banner_y = max(0, y - 26)
@@ -546,7 +547,6 @@ def generate_affected_region_overlay(
                     cv2.LINE_AA,
                 )
         
-        # Soft transparent tint over the affected lung tissue
         alpha = 0.32
         colored_fill = np.zeros_like(img_rgb)
         colored_fill[fill_mask > 0] = color_fill
@@ -559,14 +559,7 @@ def generate_affected_region_overlay(
 # Clinical Triage & Doctor Visiting Guidance Engine
 # -----------------------------------------------------------------------------
 def get_clinical_guidance(score: float, is_positive: bool) -> Dict[str, Any]:
-    """Generate personalized medical advice and visiting recommendations.
-    
-    Triage Tiers:
-    - Normal / Clear: Score < 0.20
-    - Mild / Borderline: 0.20 <= Score < 0.30
-    - Moderate Opacity / Pneumonia: 0.30 <= Score < 0.60
-    - High / Severe Consolidation: Score >= 0.60
-    """
+    """Generate personalized medical advice and visiting recommendations."""
     if score < 0.20:
         return {
             "tier": "Clear / Healthy Lungs",
@@ -579,7 +572,7 @@ def get_clinical_guidance(score: float, is_positive: bool) -> Dict[str, Any]:
             ),
             "doctor_advice": (
                 "No immediate hospital or urgent care visit is indicated based on this scan. "
-                "If you currently have mild cold or flu-like symptoms, prioritize rest and stay well hydrated. "
+                "If you currently have mild cold or seasonal flu-like symptoms, prioritize rest and stay well hydrated. "
                 "Consult your family doctor if a mild cough or low-grade fever persists beyond 10–14 days."
             ),
             "home_care": [
@@ -683,7 +676,7 @@ def get_clinical_guidance(score: float, is_positive: bool) -> Dict[str, Any]:
 # -----------------------------------------------------------------------------
 def main():
     # 1. Top Portal Header
-    st.markdown("""
+    render_html("""
     <div class="portal-header">
         <div class="portal-badge">
             <span>🛡️</span> Secure & Private • Local Offline Analysis
@@ -694,10 +687,10 @@ def main():
             lung areas and receive tailored doctor visiting advice and home care recommendations.
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # 2. Patient Guidance Workflow Banner
-    st.markdown("""
+    render_html("""
     <div class="flow-card">
         <div class="flow-item"><span class="flow-num">1</span> Upload Your Chest X-Ray</div>
         <div class="flow-arrow">→</div>
@@ -705,7 +698,7 @@ def main():
         <div class="flow-arrow">→</div>
         <div class="flow-item"><span class="flow-num">3</span> Receive Tailored Doctor Advice</div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # 3. Model Initialization (Cached)
     @st.cache_resource(show_spinner=False)
@@ -724,7 +717,7 @@ def main():
 
     # 4. Patient-Friendly Sidebar
     with st.sidebar:
-        st.markdown("""
+        render_html("""
         <div class="sidebar-block">
             <div class="sidebar-block-title">🧑‍⚕️ How to Use This Portal</div>
             <div class="sidebar-block-body">
@@ -733,7 +726,7 @@ def main():
                 <b>3. Review Doctor Advice:</b> Learn whether an in-person doctor consultation is needed today.
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
         st.markdown('<div class="sidebar-block-title" style="margin-left:0.25rem;">Demonstration Scans</div>', unsafe_allow_html=True)
         sample_choice = st.radio(
@@ -748,14 +741,14 @@ def main():
             label_visibility="collapsed",
         )
 
-        st.markdown("""
+        render_html("""
         <div class="sidebar-block" style="margin-top:1.25rem; background-color:#EFF6FF; border-color:#BFDBFE;">
             <div class="sidebar-block-title" style="color:#1E40AF;">🔒 100% Patient Privacy</div>
             <div class="sidebar-block-body" style="color:#1E3A8A;">
                 All scans are analyzed locally inside your computer's memory. No personal data or medical images are ever stored on cloud servers.
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
     # 5. Acquire Input File
     uploaded_file = None
@@ -763,12 +756,12 @@ def main():
     sample_file_name = None
 
     if sample_choice == "Upload My Own X-Ray":
-        st.markdown("""
+        render_html("""
         <div class="upload-card">
             <div class="upload-heading">Select or Drag & Drop Your Chest X-Ray</div>
             <div class="upload-sub">Supports hospital DICOM files (.dcm) as well as standard images (.png, .jpg, .jpeg)</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
         uploaded_file = st.file_uploader(
             "Upload chest radiograph file",
@@ -854,72 +847,56 @@ def main():
     # 8. Primary Screening Status Banner
     st.markdown("---")
     if prediction.is_positive:
-        st.markdown(
-            f"""
-            <div class="status-card-positive">
-                <div class="status-eyebrow">SCREENING ASSESSMENT</div>
-                <div class="status-heading">🔴 Suspected Pneumonia Detected</div>
-                <div class="status-desc">{guidance['summary']}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        render_html(f"""
+        <div class="status-card-positive">
+            <div class="status-eyebrow">SCREENING ASSESSMENT</div>
+            <div class="status-heading">🔴 Suspected Pneumonia Detected</div>
+            <div class="status-desc">{guidance['summary']}</div>
+        </div>
+        """)
     else:
-        st.markdown(
-            f"""
-            <div class="status-card-normal">
-                <div class="status-eyebrow">SCREENING ASSESSMENT</div>
-                <div class="status-heading">🟢 Clear Lung Fields — No Pneumonia Detected</div>
-                <div class="status-desc">{guidance['summary']}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        render_html(f"""
+        <div class="status-card-normal">
+            <div class="status-eyebrow">SCREENING ASSESSMENT</div>
+            <div class="status-heading">🟢 Clear Lung Fields — No Pneumonia Detected</div>
+            <div class="status-desc">{guidance['summary']}</div>
+        </div>
+        """)
 
     # 9. Key Metrics & Health Index Row
     col_m1, col_m2, col_m3 = st.columns([1.2, 1, 1.2])
 
     with col_m1:
-        st.markdown(
-            f"""
-            <div class="metric-panel">
-                <div class="metric-title">Screening Result</div>
-                <div class="metric-number" style="color: {'#DC2626' if prediction.is_positive else '#059669'};">
-                    {'POSITIVE' if prediction.is_positive else 'NEGATIVE'}
-                </div>
-                <div class="metric-note">{'Opacities identified in scan' if prediction.is_positive else 'Clear lung fields'}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        color_code = '#DC2626' if prediction.is_positive else '#059669'
+        res_text = 'POSITIVE' if prediction.is_positive else 'NEGATIVE'
+        sub_text = 'Opacities identified in scan' if prediction.is_positive else 'Clear lung fields'
+        render_html(f"""
+        <div class="metric-panel">
+            <div class="metric-title">Screening Result</div>
+            <div class="metric-number" style="color: {color_code};">{res_text}</div>
+            <div class="metric-note">{sub_text}</div>
+        </div>
+        """)
 
     with col_m2:
-        # Normalized confidence level for patient clarity
-        confidence_pct = min(100.0, max(0.0, prediction.raw_score * 100.0))
-        st.markdown(
-            f"""
-            <div class="metric-panel">
-                <div class="metric-title">Pulmonary Density Index</div>
-                <div class="metric-number">{prediction.raw_score:.3f}</div>
-                <div class="metric-note">Cutoff: 0.300 (Normal &lt; 0.30)</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        render_html(f"""
+        <div class="metric-panel">
+            <div class="metric-title">Pulmonary Density Index</div>
+            <div class="metric-number">{prediction.raw_score:.3f}</div>
+            <div class="metric-note">Cutoff: 0.300 (Normal &lt; 0.30)</div>
+        </div>
+        """)
 
     with col_m3:
-        st.markdown(
-            f"""
-            <div class="metric-panel">
-                <div class="metric-title">Consultation Urgency</div>
-                <div class="metric-number" style="font-size: 1.25rem; margin-top: 0.35rem;">
-                    <span class="advice-timeline-badge {guidance['badge_class']}">{guidance['timeline_text']}</span>
-                </div>
-                <div class="metric-note" style="margin-top: 0.65rem;">Based on radiological severity</div>
+        render_html(f"""
+        <div class="metric-panel">
+            <div class="metric-title">Consultation Urgency</div>
+            <div class="metric-number" style="font-size: 1.25rem; margin-top: 0.35rem;">
+                <span class="advice-timeline-badge {guidance['badge_class']}">{guidance['timeline_text']}</span>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            <div class="metric-note" style="margin-top: 0.65rem;">Based on radiological severity</div>
+        </div>
+        """)
 
     # 10. Interactive Visualizer: Specific Affected Region & Heatmaps
     st.markdown('<h3 style="font-size:1.35rem; font-weight:800; color:#0F172A; margin-top:0.75rem; margin-bottom:0.35rem;">🫁 Visual Lung Inspection</h3>', unsafe_allow_html=True)
@@ -932,7 +909,7 @@ def main():
     ])
 
     with tab_zones:
-        st.markdown('<div class="viewer-card">', unsafe_allow_html=True)
+        render_html('<div class="viewer-card">')
         col_img, col_info = st.columns([1.6, 1])
 
         with col_img:
@@ -943,39 +920,36 @@ def main():
             )
 
         with col_info:
-            st.markdown('<div class="viewer-header">📍 Detected Lung Locations</div>', unsafe_allow_html=True)
+            render_html('<div class="viewer-header">📍 Detected Lung Locations</div>')
             if prediction.is_positive and detected_zones:
                 st.write(f"**{len(detected_zones)} specific area(s) of interest** were identified where lung tissue density is elevated:")
                 for z in detected_zones:
-                    st.markdown(
-                        f"""
-                        <div class="zone-tag">
-                            <span>🔍</span> <b>{z['zone']}</b>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-                st.markdown("""
+                    render_html(f"""
+                    <div class="zone-tag">
+                        <span>🔍</span> <b>{z['zone']}</b>
+                    </div>
+                    """)
+                render_html("""
                 <div style="font-size:0.83rem; color:#64748B; margin-top:0.85rem; line-height:1.5;">
                     <i>Note for patients:</i> In chest radiographs, the left side of the image shows your <b>Right Lung</b>, 
                     and the right side shows your <b>Left Lung</b>. The highlighted boundaries indicate areas of suspected fluid accumulation or consolidation.
                 </div>
-                """, unsafe_allow_html=True)
+                """)
             elif prediction.is_positive:
                 st.info("Pneumonia features detected across diffuse bilateral lung fields.")
             else:
-                st.markdown("""
+                render_html("""
                 <div style="background-color:#ECFDF5; border:1px solid #A7F3D0; border-radius:10px; padding:1.25rem; color:#065F46;">
                     <b>✅ All Lung Quadrants Clear</b><br>
                     No localized consolidations, focal fluid pockets, or abnormal pulmonary infiltrates were detected. 
                     Both right and left lung fields exhibit normal radiographic transparency.
                 </div>
-                """, unsafe_allow_html=True)
+                """)
 
-        st.markdown('</div>', unsafe_allow_html=True)
+        render_html('</div>')
 
     with tab_heat:
-        st.markdown('<div class="viewer-card">', unsafe_allow_html=True)
+        render_html('<div class="viewer-card">')
         col_th1, col_th2 = st.columns([1.6, 1])
         with col_th1:
             st.image(
@@ -984,16 +958,16 @@ def main():
                 use_container_width=True,
             )
         with col_th2:
-            st.markdown('<div class="viewer-header">🌡️ How to Read This Heatmap</div>', unsafe_allow_html=True)
+            render_html('<div class="viewer-header">🌡️ How to Read This Heatmap</div>')
             st.write(
                 "This thermal color map visualizes the concentration of radiological evidence:\n\n"
                 "- 🔴 **Red & Yellow Areas:** Highest concentration of pneumonia-like density patterns.\n"
                 "- 🔵 **Blue & Cool Areas:** Normal, clear air-filled lung spaces."
             )
-        st.markdown('</div>', unsafe_allow_html=True)
+        render_html('</div>')
 
     with tab_orig:
-        st.markdown('<div class="viewer-card">', unsafe_allow_html=True)
+        render_html('<div class="viewer-card">')
         col_or1, col_or2 = st.columns([1.6, 1])
         with col_or1:
             st.image(
@@ -1002,54 +976,54 @@ def main():
                 use_container_width=True,
             )
         with col_or2:
-            st.markdown('<div class="viewer-header">📋 Scan Details</div>', unsafe_allow_html=True)
+            render_html('<div class="viewer-header">📋 Scan Details</div>')
             st.write("**File Name:**", active_name)
             st.write("**Scan Format:**", meta.get("format", "Radiograph"))
             st.write("**Native Dimensions:**", meta.get("dimensions", "N/A"))
             st.write("**Patient ID:**", meta.get("patient_id", "Anonymous"))
             st.write("**Projection:**", meta.get("view_position", "Standard Chest PA"))
-        st.markdown('</div>', unsafe_allow_html=True)
+        render_html('</div>')
 
     # 11. Personalized Doctor Advice & Visiting Recommendations
-    st.markdown(
-        f"""
-        <div class="advice-card">
-            <div class="advice-header">
-                <span class="advice-icon">🩺</span>
-                <h3 class="advice-title">Personalized Doctor & Care Recommendations</h3>
-                <span class="advice-timeline-badge {guidance['badge_class']}">{guidance['timeline_text']}</span>
-            </div>
-            
-            <div class="advice-section">
-                <div class="advice-sec-title"><span>🏥</span> Clinical Consultation Guidance</div>
-                <p class="advice-sec-text">{guidance['doctor_advice']}</p>
-            </div>
-            
-            <div class="advice-section">
-                <div class="advice-sec-title"><span>🍵</span> Home Care & Immediate Management</div>
-                <ul class="advice-sec-text" style="padding-left: 1.25rem; margin-top: 0.35rem;">
-                    {''.join(f'<li style="margin-bottom:0.25rem;">{item}</li>' for item in guidance['home_care'])}
-                </ul>
-            </div>
-            
-            <div class="advice-section">
-                <div class="advice-sec-title"><span>🔬</span> Diagnostic Tests Your Doctor May Recommend</div>
-                <p class="advice-sec-text">{guidance['tests_expected']}</p>
-            </div>
+    home_care_items = "".join(f'<li style="margin-bottom:0.25rem;">{item}</li>' for item in guidance['home_care'])
+    questions_items = "".join(f'<li style="margin-bottom:0.25rem;">"{q}"</li>' for q in guidance['questions_to_ask'])
 
-            <div class="advice-section" style="margin-bottom: 0.5rem;">
-                <div class="advice-sec-title"><span>📝</span> Questions to Ask Your Doctor During Your Visit</div>
-                <ul class="advice-sec-text" style="padding-left: 1.25rem; margin-top: 0.35rem;">
-                    {''.join(f'<li style="margin-bottom:0.25rem;">"{q}"</li>' for q in guidance['questions_to_ask'])}
-                </ul>
-            </div>
+    render_html(f"""
+    <div class="advice-card">
+        <div class="advice-header">
+            <span class="advice-icon">🩺</span>
+            <h3 class="advice-title">Personalized Doctor & Care Recommendations</h3>
+            <span class="advice-timeline-badge {guidance['badge_class']}">{guidance['timeline_text']}</span>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        
+        <div class="advice-section">
+            <div class="advice-sec-title"><span>🏥</span> Clinical Consultation Guidance</div>
+            <p class="advice-sec-text">{guidance['doctor_advice']}</p>
+        </div>
+        
+        <div class="advice-section">
+            <div class="advice-sec-title"><span>🍵</span> Home Care & Immediate Management</div>
+            <ul class="advice-sec-text" style="padding-left: 1.25rem; margin-top: 0.35rem;">
+                {home_care_items}
+            </ul>
+        </div>
+        
+        <div class="advice-section">
+            <div class="advice-sec-title"><span>🔬</span> Diagnostic Tests Your Doctor May Recommend</div>
+            <p class="advice-sec-text">{guidance['tests_expected']}</p>
+        </div>
+
+        <div class="advice-section" style="margin-bottom: 0.5rem;">
+            <div class="advice-sec-title"><span>📝</span> Questions to Ask Your Doctor During Your Visit</div>
+            <ul class="advice-sec-text" style="padding-left: 1.25rem; margin-top: 0.35rem;">
+                {questions_items}
+            </ul>
+        </div>
+    </div>
+    """)
 
     # 12. Red Flag Warnings Card (Always visible for safety)
-    st.markdown("""
+    render_html("""
     <div class="red-flag-box">
         <div class="red-flag-title">⚠️ When to Seek Immediate Emergency Medical Care</div>
         <div style="font-size: 0.84rem; color: #881337; margin-bottom: 0.35rem;">
@@ -1063,17 +1037,17 @@ def main():
             <li><b>Confusion, severe dizziness, or extreme lethargy</b>, particularly in elderly individuals.</li>
         </ul>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # 13. Patient Trust & Educational Disclaimer Footer
-    st.markdown("""
+    render_html("""
     <div class="trust-footer">
         <b>Educational Health Screening Tool:</b> PneumoVision provides preliminary chest radiograph analysis 
         to support informed discussions between patients and their physicians. This software is not a replacement for 
         a formal clinical diagnosis by a licensed radiologist or medical practitioner. Always consult a healthcare 
         provider for personalized clinical care and prescription treatments.
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
 
 if __name__ == "__main__":
