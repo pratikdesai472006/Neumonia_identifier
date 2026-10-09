@@ -39,7 +39,9 @@ st.set_page_config(
 
 def render_html(html_str: str):
     """Safely render HTML without accidental markdown 4-space code block conversion."""
-    st.markdown(textwrap.dedent(html_str).strip(), unsafe_allow_html=True)
+    clean_lines = [line.strip() for line in html_str.splitlines() if line.strip()]
+    clean_html = "".join(clean_lines)
+    st.markdown(clean_html, unsafe_allow_html=True)
 
 
 render_html("""
@@ -47,19 +49,73 @@ render_html("""
     /* Google Fonts & Base Typography */
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
     
-    html, body, [class*="css"] {
+    html, body, [class*="css"], [class*="st-"] {
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
         color: #0F172A !important;
     }
     
     /* Calming clinical digital health background */
-    .stApp {
+    .stApp, [data-testid="stAppViewContainer"] {
         background-color: #F8FAFC !important;
+        color: #0F172A !important;
     }
 
     header[data-testid="stHeader"] {
         background-color: rgba(248, 250, 252, 0.95) !important;
         backdrop-filter: blur(10px) !important;
+    }
+
+    /* Ensure ALL standard text elements are dark and clearly visible without hover */
+    p, span, label, li, h1, h2, h3, h4, h5, h6, div {
+        color: #0F172A;
+    }
+    
+    /* Streamlit Tab Buttons - Always Bold, Dark Charcoal, Never Invisible */
+    div[data-testid="stTabs"] {
+        margin-top: 0.5rem !important;
+    }
+    div[data-testid="stTabs"] button {
+        color: #1E293B !important;
+        font-weight: 700 !important;
+        font-size: 0.95rem !important;
+        background-color: transparent !important;
+        opacity: 1 !important;
+        border-bottom: 2px solid transparent !important;
+    }
+    div[data-testid="stTabs"] button p, 
+    div[data-testid="stTabs"] button div, 
+    div[data-testid="stTabs"] button span {
+        color: #1E293B !important;
+        font-weight: 700 !important;
+        font-size: 0.95rem !important;
+    }
+    div[data-testid="stTabs"] button[aria-selected="true"] {
+        color: #0284C7 !important;
+        border-bottom: 2.5px solid #0284C7 !important;
+    }
+    div[data-testid="stTabs"] button[aria-selected="true"] p,
+    div[data-testid="stTabs"] button[aria-selected="true"] div,
+    div[data-testid="stTabs"] button[aria-selected="true"] span {
+        color: #0284C7 !important;
+        font-weight: 800 !important;
+    }
+    div[data-testid="stTabs"] button:hover p {
+        color: #0369A1 !important;
+    }
+
+    /* Radio buttons and sidebar options */
+    div[data-testid="stRadio"] label, 
+    div[data-testid="stRadio"] p, 
+    div[data-testid="stRadio"] span {
+        color: #0F172A !important;
+        font-weight: 600 !important;
+    }
+
+    /* Markdown text containers */
+    div[data-testid="stMarkdownContainer"] p,
+    div[data-testid="stMarkdownContainer"] span,
+    div[data-testid="stMarkdownContainer"] li {
+        color: #1E293B !important;
     }
 
     /* Top Navigation / Hero Header */
@@ -96,7 +152,7 @@ render_html("""
     .portal-subtitle {
         font-size: 1.02rem !important;
         font-weight: 400 !important;
-        color: #93C5FD !important;
+        color: #BFDBFE !important;
         margin-top: 0.5rem !important;
         max-width: 780px !important;
         line-height: 1.55 !important;
@@ -120,7 +176,7 @@ render_html("""
         gap: 0.5rem !important;
         font-size: 0.88rem !important;
         font-weight: 600 !important;
-        color: #334155 !important;
+        color: #1E293B !important;
     }
     .flow-num {
         background-color: #E0F2FE !important;
@@ -135,7 +191,7 @@ render_html("""
         font-size: 0.75rem !important;
     }
     .flow-arrow {
-        color: #94A3B8 !important;
+        color: #64748B !important;
         font-size: 0.9rem !important;
     }
 
@@ -161,7 +217,7 @@ render_html("""
     }
     .upload-sub {
         font-size: 0.88rem !important;
-        color: #64748B !important;
+        color: #475569 !important;
     }
 
     /* Screening Status Cards */
@@ -173,6 +229,9 @@ render_html("""
         color: #065F46 !important;
         margin-bottom: 1.5rem !important;
     }
+    .status-card-normal * {
+        color: #065F46 !important;
+    }
     .status-card-positive {
         background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%) !important;
         border: 1px solid #FCA5A5 !important;
@@ -180,6 +239,9 @@ render_html("""
         padding: 1.5rem 1.75rem !important;
         color: #991B1B !important;
         margin-bottom: 1.5rem !important;
+    }
+    .status-card-positive * {
+        color: #991B1B !important;
     }
     .status-eyebrow {
         font-size: 0.8rem !important;
@@ -216,7 +278,7 @@ render_html("""
     .metric-title {
         font-size: 0.82rem !important;
         font-weight: 700 !important;
-        color: #64748B !important;
+        color: #475569 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.05em !important;
         margin-bottom: 0.35rem !important;
@@ -228,7 +290,7 @@ render_html("""
     }
     .metric-note {
         font-size: 0.82rem !important;
-        color: #64748B !important;
+        color: #475569 !important;
         margin-top: 0.25rem !important;
     }
 
@@ -262,9 +324,9 @@ render_html("""
     }
     .advice-timeline-badge {
         margin-left: auto !important;
-        padding: 0.3rem 0.85rem !important;
+        padding: 0.35rem 0.95rem !important;
         border-radius: 9999px !important;
-        font-size: 0.8rem !important;
+        font-size: 0.82rem !important;
         font-weight: 700 !important;
     }
     .timeline-routine {
@@ -287,19 +349,24 @@ render_html("""
         margin-bottom: 1.25rem !important;
     }
     .advice-sec-title {
-        font-size: 0.96rem !important;
+        font-size: 0.98rem !important;
         font-weight: 700 !important;
         color: #1E293B !important;
         margin-bottom: 0.45rem !important;
         display: flex !important;
         align-items: center !important;
-        gap: 0.4rem !important;
+        gap: 0.45rem !important;
     }
     .advice-sec-text {
-        font-size: 0.91rem !important;
+        font-size: 0.92rem !important;
         color: #334155 !important;
-        line-height: 1.6 !important;
+        line-height: 1.65 !important;
         margin: 0 !important;
+    }
+    .advice-sec-text li {
+        color: #334155 !important;
+        font-size: 0.92rem !important;
+        line-height: 1.55 !important;
     }
 
     /* Red Flags Warning Box */
@@ -311,20 +378,23 @@ render_html("""
         margin-top: 1rem !important;
     }
     .red-flag-title {
-        font-size: 0.92rem !important;
+        font-size: 0.94rem !important;
         font-weight: 800 !important;
         color: #9F1239 !important;
         display: flex !important;
         align-items: center !important;
-        gap: 0.4rem !important;
+        gap: 0.45rem !important;
         margin-bottom: 0.45rem !important;
     }
     .red-flag-list {
-        font-size: 0.86rem !important;
+        font-size: 0.88rem !important;
         color: #881337 !important;
         margin: 0 !important;
-        padding-left: 1.2rem !important;
-        line-height: 1.55 !important;
+        padding-left: 1.25rem !important;
+        line-height: 1.6 !important;
+    }
+    .red-flag-list li {
+        color: #881337 !important;
     }
 
     /* Detected Zone Pill Tags */
@@ -335,11 +405,14 @@ render_html("""
         background-color: #EFF6FF !important;
         border: 1px solid #BFDBFE !important;
         color: #1D4ED8 !important;
-        font-size: 0.82rem !important;
+        font-size: 0.84rem !important;
         font-weight: 600 !important;
         padding: 0.35rem 0.75rem !important;
         border-radius: 8px !important;
         margin: 0.25rem 0.25rem 0.25rem 0 !important;
+    }
+    .zone-tag * {
+        color: #1D4ED8 !important;
     }
 
     /* Image Display Container */
@@ -347,18 +420,18 @@ render_html("""
         background-color: #FFFFFF !important;
         border: 1px solid #E2E8F0 !important;
         border-radius: 14px !important;
-        padding: 1rem !important;
+        padding: 1.25rem !important;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
         margin-bottom: 1rem !important;
     }
     .viewer-header {
-        font-size: 0.92rem !important;
+        font-size: 0.95rem !important;
         font-weight: 700 !important;
         color: #1E293B !important;
-        margin-bottom: 0.65rem !important;
+        margin-bottom: 0.75rem !important;
         display: flex !important;
         align-items: center !important;
-        gap: 0.4rem !important;
+        gap: 0.45rem !important;
     }
 
     /* Sidebar Clean Styling */
@@ -370,7 +443,7 @@ render_html("""
         margin-bottom: 1.25rem !important;
     }
     .sidebar-block-title {
-        font-size: 0.88rem !important;
+        font-size: 0.9rem !important;
         font-weight: 800 !important;
         color: #0F172A !important;
         margin-bottom: 0.5rem !important;
@@ -379,9 +452,9 @@ render_html("""
         gap: 0.4rem !important;
     }
     .sidebar-block-body {
-        font-size: 0.82rem !important;
-        color: #475569 !important;
-        line-height: 1.5 !important;
+        font-size: 0.84rem !important;
+        color: #334155 !important;
+        line-height: 1.55 !important;
     }
 
     /* Trust & Disclaimer Footer */
@@ -392,9 +465,9 @@ render_html("""
         padding: 1.25rem 1.5rem !important;
         margin-top: 2rem !important;
         margin-bottom: 1.5rem !important;
-        font-size: 0.82rem !important;
-        color: #64748B !important;
-        line-height: 1.5 !important;
+        font-size: 0.84rem !important;
+        color: #475569 !important;
+        line-height: 1.55 !important;
         text-align: center !important;
     }
 </style>
@@ -743,8 +816,8 @@ def main():
 
         render_html("""
         <div class="sidebar-block" style="margin-top:1.25rem; background-color:#EFF6FF; border-color:#BFDBFE;">
-            <div class="sidebar-block-title" style="color:#1E40AF;">🔒 100% Patient Privacy</div>
-            <div class="sidebar-block-body" style="color:#1E3A8A;">
+            <div class="sidebar-block-title" style="color:#1E40AF !important;">🔒 100% Patient Privacy</div>
+            <div class="sidebar-block-body" style="color:#1E3A8A !important;">
                 All scans are analyzed locally inside your computer's memory. No personal data or medical images are ever stored on cloud servers.
             </div>
         </div>
@@ -873,7 +946,7 @@ def main():
         render_html(f"""
         <div class="metric-panel">
             <div class="metric-title">Screening Result</div>
-            <div class="metric-number" style="color: {color_code};">{res_text}</div>
+            <div class="metric-number" style="color: {color_code} !important;">{res_text}</div>
             <div class="metric-note">{sub_text}</div>
         </div>
         """)
@@ -900,7 +973,7 @@ def main():
 
     # 10. Interactive Visualizer: Specific Affected Region & Heatmaps
     st.markdown('<h3 style="font-size:1.35rem; font-weight:800; color:#0F172A; margin-top:0.75rem; margin-bottom:0.35rem;">🫁 Visual Lung Inspection</h3>', unsafe_allow_html=True)
-    st.markdown('<p style="font-size:0.92rem; color:#64748B; margin-bottom:1rem;">Explore the specific areas of your chest radiograph identified during screening.</p>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size:0.92rem; color:#475569; margin-bottom:1rem;">Explore the specific areas of your chest radiograph identified during screening.</p>', unsafe_allow_html=True)
 
     tab_zones, tab_heat, tab_orig = st.tabs([
         "🎯 Specific Affected Region (Clear Highlight)",
@@ -930,7 +1003,7 @@ def main():
                     </div>
                     """)
                 render_html("""
-                <div style="font-size:0.83rem; color:#64748B; margin-top:0.85rem; line-height:1.5;">
+                <div style="font-size:0.85rem; color:#475569; margin-top:0.85rem; line-height:1.55;">
                     <i>Note for patients:</i> In chest radiographs, the left side of the image shows your <b>Right Lung</b>, 
                     and the right side shows your <b>Left Lung</b>. The highlighted boundaries indicate areas of suspected fluid accumulation or consolidation.
                 </div>
@@ -959,11 +1032,12 @@ def main():
             )
         with col_th2:
             render_html('<div class="viewer-header">🌡️ How to Read This Heatmap</div>')
-            st.write(
-                "This thermal color map visualizes the concentration of radiological evidence:\n\n"
-                "- 🔴 **Red & Yellow Areas:** Highest concentration of pneumonia-like density patterns.\n"
-                "- 🔵 **Blue & Cool Areas:** Normal, clear air-filled lung spaces."
-            )
+            st.markdown("""
+            This thermal color map visualizes the concentration of radiological evidence:
+            
+            - 🔴 **Red & Yellow Areas:** Highest concentration of pneumonia-like density patterns.
+            - 🔵 **Blue & Cool Areas:** Normal, clear air-filled lung spaces.
+            """)
         render_html('</div>')
 
     with tab_orig:
@@ -985,69 +1059,65 @@ def main():
         render_html('</div>')
 
     # 11. Personalized Doctor Advice & Visiting Recommendations
-    home_care_items = "".join(f'<li style="margin-bottom:0.25rem;">{item}</li>' for item in guidance['home_care'])
-    questions_items = "".join(f'<li style="margin-bottom:0.25rem;">"{q}"</li>' for q in guidance['questions_to_ask'])
+    # Constructing as a single HTML string with NO internal blank lines to ensure 100% clean rendering
+    home_care_items = "".join(f'<li style="margin-bottom:0.35rem; color:#334155 !important;">{item}</li>' for item in guidance['home_care'])
+    questions_items = "".join(f'<li style="margin-bottom:0.35rem; color:#334155 !important;">"{q}"</li>' for q in guidance['questions_to_ask'])
 
-    render_html(f"""
-    <div class="advice-card">
-        <div class="advice-header">
-            <span class="advice-icon">🩺</span>
-            <h3 class="advice-title">Personalized Doctor & Care Recommendations</h3>
-            <span class="advice-timeline-badge {guidance['badge_class']}">{guidance['timeline_text']}</span>
-        </div>
-        
-        <div class="advice-section">
-            <div class="advice-sec-title"><span>🏥</span> Clinical Consultation Guidance</div>
-            <p class="advice-sec-text">{guidance['doctor_advice']}</p>
-        </div>
-        
-        <div class="advice-section">
-            <div class="advice-sec-title"><span>🍵</span> Home Care & Immediate Management</div>
-            <ul class="advice-sec-text" style="padding-left: 1.25rem; margin-top: 0.35rem;">
-                {home_care_items}
-            </ul>
-        </div>
-        
-        <div class="advice-section">
-            <div class="advice-sec-title"><span>🔬</span> Diagnostic Tests Your Doctor May Recommend</div>
-            <p class="advice-sec-text">{guidance['tests_expected']}</p>
-        </div>
-
-        <div class="advice-section" style="margin-bottom: 0.5rem;">
-            <div class="advice-sec-title"><span>📝</span> Questions to Ask Your Doctor During Your Visit</div>
-            <ul class="advice-sec-text" style="padding-left: 1.25rem; margin-top: 0.35rem;">
-                {questions_items}
-            </ul>
-        </div>
-    </div>
-    """)
+    advice_card_html = (
+        f'<div class="advice-card">'
+        f'<div class="advice-header">'
+        f'<span class="advice-icon">🩺</span>'
+        f'<h3 class="advice-title">Personalized Doctor & Care Recommendations</h3>'
+        f'<span class="advice-timeline-badge {guidance["badge_class"]}">{guidance["timeline_text"]}</span>'
+        f'</div>'
+        f'<div class="advice-section">'
+        f'<div class="advice-sec-title"><span>🏥</span> Clinical Consultation Guidance</div>'
+        f'<p class="advice-sec-text">{guidance["doctor_advice"]}</p>'
+        f'</div>'
+        f'<div class="advice-section">'
+        f'<div class="advice-sec-title"><span>🍵</span> Home Care & Immediate Management</div>'
+        f'<ul class="advice-sec-text" style="padding-left:1.25rem; margin-top:0.35rem;">{home_care_items}</ul>'
+        f'</div>'
+        f'<div class="advice-section">'
+        f'<div class="advice-sec-title"><span>🔬</span> Diagnostic Tests Your Doctor May Recommend</div>'
+        f'<p class="advice-sec-text">{guidance["tests_expected"]}</p>'
+        f'</div>'
+        f'<div class="advice-section" style="margin-bottom:0.5rem;">'
+        f'<div class="advice-sec-title"><span>📝</span> Questions to Ask Your Doctor During Your Visit</div>'
+        f'<ul class="advice-sec-text" style="padding-left:1.25rem; margin-top:0.35rem;">{questions_items}</ul>'
+        f'</div>'
+        f'</div>'
+    )
+    render_html(advice_card_html)
 
     # 12. Red Flag Warnings Card (Always visible for safety)
-    render_html("""
-    <div class="red-flag-box">
-        <div class="red-flag-title">⚠️ When to Seek Immediate Emergency Medical Care</div>
-        <div style="font-size: 0.84rem; color: #881337; margin-bottom: 0.35rem;">
-            Do not wait for a scheduled appointment if you or the patient experience any of the following critical warning signs:
-        </div>
-        <ul class="red-flag-list">
-            <li><b>Severe shortness of breath</b> or struggling to breathe while resting.</li>
-            <li><b>Bluish color</b> appearing on the lips, skin, or fingernail beds (cyanosis).</li>
-            <li><b>Oxygen saturation (SpO2) falling below 92%</b> on a pulse oximeter.</li>
-            <li><b>Sharp or stabbing chest pain</b> that worsens when taking a deep breath or coughing.</li>
-            <li><b>Confusion, severe dizziness, or extreme lethargy</b>, particularly in elderly individuals.</li>
-        </ul>
-    </div>
-    """)
+    red_flag_html = (
+        '<div class="red-flag-box">'
+        '<div class="red-flag-title">⚠️ When to Seek Immediate Emergency Medical Care</div>'
+        '<div style="font-size:0.88rem; color:#881337 !important; margin-bottom:0.45rem;">'
+        'Do not wait for a scheduled appointment if you or the patient experience any of the following critical warning signs:'
+        '</div>'
+        '<ul class="red-flag-list">'
+        '<li><b>Severe shortness of breath</b> or struggling to breathe while resting.</li>'
+        '<li><b>Bluish color</b> appearing on the lips, skin, or fingernail beds (cyanosis).</li>'
+        '<li><b>Oxygen saturation (SpO2) falling below 92%</b> on a pulse oximeter.</li>'
+        '<li><b>Sharp or stabbing chest pain</b> that worsens when taking a deep breath or coughing.</li>'
+        '<li><b>Confusion, severe dizziness, or extreme lethargy</b>, particularly in elderly individuals.</li>'
+        '</ul>'
+        '</div>'
+    )
+    render_html(red_flag_html)
 
     # 13. Patient Trust & Educational Disclaimer Footer
-    render_html("""
-    <div class="trust-footer">
-        <b>Educational Health Screening Tool:</b> PneumoVision provides preliminary chest radiograph analysis 
-        to support informed discussions between patients and their physicians. This software is not a replacement for 
-        a formal clinical diagnosis by a licensed radiologist or medical practitioner. Always consult a healthcare 
-        provider for personalized clinical care and prescription treatments.
-    </div>
-    """)
+    footer_html = (
+        '<div class="trust-footer">'
+        '<b>Educational Health Screening Tool:</b> PneumoVision provides preliminary chest radiograph analysis '
+        'to support informed discussions between patients and their physicians. This software is not a replacement for '
+        'a formal clinical diagnosis by a licensed radiologist or medical practitioner. Always consult a healthcare '
+        'provider for personalized clinical care and prescription treatments.'
+        '</div>'
+    )
+    render_html(footer_html)
 
 
 if __name__ == "__main__":
