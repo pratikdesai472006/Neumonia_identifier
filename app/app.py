@@ -5,10 +5,27 @@ providing localized lung area visualization and personalized doctor visiting adv
 """
 
 import io
+import importlib.util
+import os
 from pathlib import Path
+import subprocess
 import sys
 import textwrap
 from typing import List, Optional, Tuple, Dict, Any
+
+# Ensure local project paths are importable
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+if str(ROOT_DIR / "third_party" / "torchxrayvision") not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR / "third_party" / "torchxrayvision"))
+
+# Auto-check and install any missing dependencies on startup
+try:
+    from src.utils.dependency_checker import check_and_install_dependencies
+    check_and_install_dependencies(auto_install=True, verbose=False)
+except Exception:
+    pass
 
 import cv2
 import numpy as np
@@ -16,11 +33,6 @@ from PIL import Image
 import pydicom
 import streamlit as st
 import torch
-
-# Ensure local project paths are importable
-ROOT_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT_DIR))
-sys.path.insert(0, str(ROOT_DIR / "third_party" / "torchxrayvision"))
 
 import torchxrayvision as xrv
 from src.models.pneumonia_model import PneumoniaModel, PneumoniaPrediction

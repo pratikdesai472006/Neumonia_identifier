@@ -49,9 +49,17 @@ dataset/*.zip
 checkpoints/*.pth
 checkpoints/*.pt
 checkpoints/*.onnx
+pneumonia_all_in_one/checkpoints/*.pth
+pneumonia_all_in_one/checkpoints/*.pt
+pneumonia_all_in_one/checkpoints/*.onnx
 
 # IDE & OS files
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Standalone All-In-One virtual environments and caches
+pneumonia_all_in_one/.venv/
+pneumonia_all_in_one/**/__pycache__/
+

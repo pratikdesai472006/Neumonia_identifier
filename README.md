@@ -117,17 +117,29 @@ flowchart LR
 
 ---
 
-## 5. How to Run the Application
+## 5. Quickstart & Installation Guide
 
-### 5.1 Activate Virtual Environment
-```powershell
-& .venv\Scripts\Activate.ps1
+### 5.1 ⚡ One-Command Terminal Installation
+To install all required libraries with a single terminal command:
+```bash
+pip install -r requirements.txt
 ```
 
-### 5.2 Launch Streamlit Interface
-```powershell
-streamlit run app/app.py
-```
+### 5.2 🖱️ One-Click Automated Setup (Windows)
+Double-click [`install_requirements.bat`](file:///e:/CV_OEP/install_requirements.bat) in the root directory. It will detect your environment, install/upgrade all dependencies from `requirements.txt`, and verify every package.
+
+### 5.3 🤖 Automated Dependency Self-Checking (Zero-Friction Setup)
+Every entry point in PneumoVision includes automatic pre-flight dependency checking:
+- **Localhost Web App (`app/app.py` & `run_pneumovision.bat`)**: Checks all required libraries on startup. If any library is missing, it automatically installs it before launching the web server.
+- **Interactive Notebook (`pneumonia_complete_pipeline.ipynb`)**: Cell 1 & 2 automatically verify and install any missing packages inside your active Jupyter/Colab kernel before running code.
+- **Standalone Python Pipeline (`pneumonia_complete_pipeline.py` & `run_pipeline.bat`)**: Verifies and self-heals missing packages on execution.
+
+### 5.4 🌐 Launching the Localhost Web Interface
+- **Option A (1-Click)**: Double-click [`run_pneumovision.bat`](file:///e:/CV_OEP/run_pneumovision.bat)
+- **Option B (Terminal)**:
+  ```powershell
+  streamlit run app/app.py
+  ```
 Open your browser at `http://localhost:8501`.
 
 ---
