@@ -11,6 +11,7 @@ from pathlib import Path
 import subprocess
 import sys
 import textwrap
+from datetime import datetime
 from typing import List, Optional, Tuple, Dict, Any
 
 # Ensure local project paths are importable
@@ -26,6 +27,8 @@ try:
     check_and_install_dependencies(auto_install=True, verbose=False)
 except Exception:
     pass
+
+from src.utils.report_generator import generate_pdf_report, generate_docx_report
 
 import cv2
 import numpy as np
@@ -250,6 +253,84 @@ render_html("""
     }
     .stat-table tr.highlight-row td {
         color: #1D4ED8 !important;
+    }
+
+    /* Batch Patient Screening Table */
+    .batch-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin: 0.85rem 0 1.5rem 0 !important;
+        background-color: #FFFFFF !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+    }
+    .batch-table th {
+        background-color: #F8FAFC !important;
+        color: #0F172A !important;
+        font-weight: 800 !important;
+        font-size: 0.88rem !important;
+        padding: 0.85rem 1.15rem !important;
+        border-bottom: 2px solid #E2E8F0 !important;
+        text-align: left !important;
+        letter-spacing: 0.02em !important;
+    }
+    .batch-table td {
+        padding: 0.85rem 1.15rem !important;
+        border-bottom: 1px solid #F1F5F9 !important;
+        color: #1E293B !important;
+        vertical-align: middle !important;
+    }
+    .batch-table tr:hover {
+        background-color: #F8FAFC !important;
+    }
+    .batch-pid {
+        font-weight: 700 !important;
+        color: #0F172A !important;
+        font-size: 0.95rem !important;
+        line-height: 1.3 !important;
+    }
+    .batch-img-name {
+        font-size: 0.8rem !important;
+        color: #64748B !important;
+        margin-top: 0.2rem !important;
+        font-family: 'JetBrains Mono', monospace !important;
+    }
+    .badge-pos {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        background-color: #FEE2E2 !important;
+        color: #DC2626 !important;
+        border: 1px solid #FCA5A5 !important;
+        padding: 0.35rem 0.85rem !important;
+        border-radius: 9999px !important;
+        font-weight: 700 !important;
+        font-size: 0.82rem !important;
+    }
+    .badge-neg {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        background-color: #ECFDF5 !important;
+        color: #059669 !important;
+        border: 1px solid #A7F3D0 !important;
+        padding: 0.35rem 0.85rem !important;
+        border-radius: 9999px !important;
+        font-weight: 700 !important;
+        font-size: 0.82rem !important;
+    }
+    .density-score-val {
+        font-family: 'JetBrains Mono', monospace !important;
+        font-weight: 800 !important;
+        font-size: 1.05rem !important;
+        color: #0F172A !important;
+    }
+    .density-cutoff-note {
+        font-size: 0.76rem !important;
+        color: #64748B !important;
+        margin-top: 0.15rem !important;
     }
 
     /* Workflow Steps Card */
@@ -918,18 +999,19 @@ def main():
         </div>
         """)
 
-    # 5. Acquire Input File
-    uploaded_file = None
+    # 5. Acquire Input File(s)
+    uploaded_files = None
     sample_file_bytes = None
     sample_file_name = None
 
     if sample_choice == "Upload My Own X-Ray":
-        st.markdown('<h3 style="font-size:1.25rem; font-weight:800; color:#0F172A; margin-bottom:0.25rem;">📂 Upload Your Chest X-Ray</h3>', unsafe_allow_html=True)
-        st.markdown('<p style="font-size:0.88rem; color:#475569; margin-bottom:0.75rem;">Supports hospital DICOM files (<code>.dcm</code>) as well as standard images (<code>.png</code>, <code>.jpg</code>, <code>.jpeg</code>)</p>', unsafe_allow_html=True)
+        st.markdown('<h3 style="font-size:1.25rem; font-weight:800; color:#0F172A; margin-bottom:0.25rem;">📂 Upload Patient Chest Radiograph(s)</h3>', unsafe_allow_html=True)
+        st.markdown('<p style="font-size:0.88rem; color:#475569; margin-bottom:0.75rem;">Upload one or multiple patient scans at once. Supports hospital DICOM (<code>.dcm</code>) and standard images (<code>.png</code>, <code>.jpg</code>, <code>.jpeg</code>).</p>', unsafe_allow_html=True)
 
-        uploaded_file = st.file_uploader(
-            "Upload chest radiograph file",
+        uploaded_files = st.file_uploader(
+            "Upload chest radiograph file(s)",
             type=["dcm", "png", "jpg", "jpeg"],
+            accept_multiple_files=True,
             label_visibility="collapsed",
         )
     elif sample_choice == "Demo 1: Clear Healthy Lungs (Normal)":
@@ -948,72 +1030,204 @@ def main():
             sample_file_bytes = p.read_bytes()
             sample_file_name = p.name
 
-    # Determine active file
-    if uploaded_file is not None:
-        active_bytes = uploaded_file.getvalue()
-        active_name = uploaded_file.name
-    elif sample_file_bytes is not None:
-        active_bytes = sample_file_bytes
-        active_name = sample_file_name
+    # Determine active files list
+    file_items: List[Tuple[bytes, str]] = []
+    if uploaded_files:
+        for f in uploaded_files:
+            file_items.append((f.getvalue(), f.name))
+    elif sample_file_bytes is not None and sample_file_name is not None:
+        file_items.append((sample_file_bytes, sample_file_name))
     else:
-        st.info("👆 Please upload a chest X-ray file above, or select a demonstration scan from the left sidebar to begin.")
+        st.info("👆 Please upload one or more chest X-ray files above, or select a demonstration scan from the left sidebar to begin.")
         return
 
-    # 6. Preprocessing
-    try:
-        file_ext = Path(active_name).suffix.lower()
-        if file_ext == ".dcm":
-            input_tensor, display_img, meta = preprocess_dicom_bytes(active_bytes)
-        elif file_ext in [".png", ".jpg", ".jpeg"]:
-            input_tensor, display_img, meta = preprocess_image_bytes(active_bytes, active_name)
+    # Process all uploaded files
+    batch_records = []
+    with st.spinner(f"Analyzing {len(file_items)} patient radiograph(s)..."):
+        for f_bytes, f_name in file_items:
+            f_ext = Path(f_name).suffix.lower()
+            try:
+                if f_ext == ".dcm":
+                    tensor, disp_img, meta = preprocess_dicom_bytes(f_bytes)
+                elif f_ext in [".png", ".jpg", ".jpeg"]:
+                    tensor, disp_img, meta = preprocess_image_bytes(f_bytes, f_name)
+                else:
+                    continue
+
+                prediction = model_wrapper.predict(tensor)
+                pid = meta.get("patient_id")
+                if not pid or pid == "Anonymous Patient":
+                    pid = Path(f_name).stem
+
+                batch_records.append({
+                    "patient_id": pid,
+                    "image_name": f_name,
+                    "is_positive": prediction.is_positive,
+                    "result_text": "POSITIVE" if prediction.is_positive else "NEGATIVE",
+                    "density_index": float(prediction.raw_score),
+                    "input_tensor": tensor,
+                    "display_img": disp_img,
+                    "meta": meta,
+                    "prediction": prediction,
+                })
+            except Exception as e:
+                st.warning(f"Error processing scan '{f_name}': {e}")
+
+    if not batch_records:
+        st.error("No valid scans could be processed. Please upload valid .dcm, .png, or .jpg files.")
+        return
+
+    # Batch Telemetry & 3-Column Summary Table
+    total_count = len(batch_records)
+    pos_count = sum(1 for r in batch_records if r["is_positive"])
+    neg_count = total_count - pos_count
+    pos_pct = (pos_count / total_count * 100.0) if total_count > 0 else 0.0
+
+    st.markdown("---")
+    st.markdown('<h3 style="font-size:1.35rem; font-weight:800; color:#0F172A; margin-bottom:0.25rem;">📊 Patient Screening Batch Telemetry</h3>', unsafe_allow_html=True)
+    st.markdown(f'<p style="font-size:0.9rem; color:#475569; margin-bottom:0.85rem;">Screening evaluation across <b>{total_count} patient scan(s)</b> — <b>{pos_count} positive</b> ({pos_pct:.1f}%), <b>{neg_count} negative</b>.</p>', unsafe_allow_html=True)
+
+    # Render the 3-Column Table (Patient ID with image name below, Positive/Negative, Density Index)
+    table_rows_html = []
+    for r in batch_records:
+        if r["is_positive"]:
+            badge_html = '<span class="badge-pos">🔴 POSITIVE</span><div style="font-size:0.75rem; color:#991B1B; margin-top:0.25rem; font-weight:600;">Suspected Infiltrate</div>'
+            cutoff_lbl = "Elevated Opacity"
         else:
-            st.error(f"Unsupported file format '{file_ext}'. Supported formats: .dcm, .png, .jpg, .jpeg")
-            return
-    except Exception as err:
-        st.error(f"Image Reading Error: {err}")
-        return
+            badge_html = '<span class="badge-neg">🟢 NEGATIVE</span><div style="font-size:0.75rem; color:#065F46; margin-top:0.25rem; font-weight:600;">Clear Lung Fields</div>'
+            cutoff_lbl = "Normal Density"
 
-    # 7. Screening Execution & Localized Region Extraction
-    with st.spinner("Analyzing lung fields and detecting affected areas..."):
+        row_html = (
+            f'<tr>'
+            f'<td style="width: 44%;">'
+            f'<div class="batch-pid">{r["patient_id"]}</div>'
+            f'<div class="batch-img-name">📁 Image: {r["image_name"]}</div>'
+            f'</td>'
+            f'<td style="width: 28%;">'
+            f'{badge_html}'
+            f'</td>'
+            f'<td style="width: 28%;">'
+            f'<div class="density-score-val">{r["density_index"]:.3f}</div>'
+            f'<div class="density-cutoff-note">Cutoff: 0.300 ({cutoff_lbl})</div>'
+            f'</td>'
+            f'</tr>'
+        )
+        table_rows_html.append(row_html)
+
+    all_rows_str = "".join(table_rows_html)
+    batch_table_html = (
+        f'<table class="batch-table">'
+        f'<thead>'
+        f'<tr>'
+        f'<th style="width: 44%;">Patient ID &amp; Radiograph</th>'
+        f'<th style="width: 28%;">Screening Result</th>'
+        f'<th style="width: 28%;">Pulmonary Density Index</th>'
+        f'</tr>'
+        f'</thead>'
+        f'<tbody>'
+        f'{all_rows_str}'
+        f'</tbody>'
+        f'</table>'
+    )
+    render_html(batch_table_html)
+
+    # Document Export Action Buttons
+    col_d1, col_d2 = st.columns(2)
+    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    try:
+        pdf_bytes = generate_pdf_report(batch_records, title="PneumoVision Patient Screening Report")
+        with col_d1:
+            st.download_button(
+                label="📄 Export Batch Report as PDF",
+                data=pdf_bytes,
+                file_name=f"pneumovision_batch_report_{timestamp_str}.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+    except Exception as pdf_err:
+        with col_d1:
+            st.error(f"PDF Export Error: {pdf_err}")
+
+    try:
+        docx_bytes = generate_docx_report(batch_records, title="PneumoVision Patient Screening Report")
+        with col_d2:
+            st.download_button(
+                label="📝 Export Batch Report as Word (DOCX)",
+                data=docx_bytes,
+                file_name=f"pneumovision_batch_report_{timestamp_str}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True,
+            )
+    except Exception as docx_err:
+        with col_d2:
+            st.error(f"DOCX Export Error: {docx_err}")
+
+    # Detailed Individual Radiograph Inspection
+    st.markdown("---")
+    st.markdown('<h3 style="font-size:1.35rem; font-weight:800; color:#0F172A; margin-top:0.5rem; margin-bottom:0.25rem;">🔍 Individual Radiograph Inspection &amp; Doctor Advisory</h3>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size:0.9rem; color:#475569; margin-bottom:0.75rem;">Examine localized lung infiltrates (Grad-CAM), thermal activity overlays, and personalized clinical guidance.</p>', unsafe_allow_html=True)
+
+    if total_count > 1:
+        scan_labels = [
+            f"{i+1}. Patient: {r['patient_id']} | Image: {r['image_name']} | Result: {r['result_text']} (Density: {r['density_index']:.3f})"
+            for i, r in enumerate(batch_records)
+        ]
+        chosen_idx = st.selectbox(
+            "Select scan to inspect in detail:",
+            options=list(range(total_count)),
+            format_func=lambda idx: scan_labels[idx],
+            label_visibility="collapsed",
+        )
+        active_record = batch_records[chosen_idx]
+    else:
+        active_record = batch_records[0]
+
+    # Active scan details
+    active_tensor = active_record["input_tensor"]
+    active_disp = active_record["display_img"]
+    active_meta = active_record["meta"]
+    active_pred = active_record["prediction"]
+    active_name = active_record["image_name"]
+    active_pid = active_record["patient_id"]
+
+    # Compute Grad-CAM on active scan
+    with st.spinner(f"Generating Grad-CAM spatial activation mapping for {active_pid}..."):
         try:
-            prediction: PneumoniaPrediction = model_wrapper.predict(input_tensor)
-
             gradcam = GradCAM(
                 model=model_wrapper.raw_model,
                 target_layer=model_wrapper.get_gradcam_target_layer(),
-                target_index=prediction.target_index,
+                target_index=active_pred.target_index,
             )
             heatmap = gradcam.generate_heatmap(
-                input_tensor=input_tensor,
-                target_index=prediction.target_index,
+                input_tensor=active_tensor,
+                target_index=active_pred.target_index,
             )
             thermal_overlay, _ = gradcam.overlay_heatmap(
-                original_image=display_img,
+                original_image=active_disp,
                 heatmap=heatmap,
                 alpha=0.45,
                 colormap=cv2.COLORMAP_JET,
             )
             gradcam.remove_hooks()
 
-            # Generate patient-friendly specific affected region view
             affected_overlay, detected_zones = generate_affected_region_overlay(
-                display_img=display_img,
+                display_img=active_disp,
                 heatmap=heatmap,
-                is_positive=prediction.is_positive,
+                is_positive=active_pred.is_positive,
             )
         except Exception as e:
-            st.error(f"Screening analysis could not complete: {e}")
+            st.error(f"Grad-CAM could not complete: {e}")
             return
 
     # Clinical guidance payload
-    guidance = get_clinical_guidance(prediction.raw_score, prediction.is_positive)
+    guidance = get_clinical_guidance(active_pred.raw_score, active_pred.is_positive)
 
-    # 8. Primary Screening Status Banner
-    st.markdown("---")
-    if prediction.is_positive:
+    # Active Scan Assessment Banner
+    if active_pred.is_positive:
         render_html(f"""
         <div class="status-card-positive">
-            <div class="status-eyebrow">SCREENING ASSESSMENT</div>
+            <div class="status-eyebrow">PATIENT: {active_pid} • IMAGE: {active_name}</div>
             <div class="status-heading">🔴 Suspected Pneumonia Detected</div>
             <div class="status-desc">{guidance['summary']}</div>
         </div>
@@ -1021,19 +1235,19 @@ def main():
     else:
         render_html(f"""
         <div class="status-card-normal">
-            <div class="status-eyebrow">SCREENING ASSESSMENT</div>
+            <div class="status-eyebrow">PATIENT: {active_pid} • IMAGE: {active_name}</div>
             <div class="status-heading">🟢 Clear Lung Fields — No Pneumonia Detected</div>
             <div class="status-desc">{guidance['summary']}</div>
         </div>
         """)
 
-    # 9. Key Metrics & Health Index Row
+    # Metric Row
     col_m1, col_m2, col_m3 = st.columns([1.2, 1, 1.2])
 
     with col_m1:
-        color_code = '#DC2626' if prediction.is_positive else '#059669'
-        res_text = 'POSITIVE' if prediction.is_positive else 'NEGATIVE'
-        sub_text = 'Opacities identified in scan' if prediction.is_positive else 'Clear lung fields'
+        color_code = '#DC2626' if active_pred.is_positive else '#059669'
+        res_text = 'POSITIVE' if active_pred.is_positive else 'NEGATIVE'
+        sub_text = 'Opacities identified in scan' if active_pred.is_positive else 'Clear lung fields'
         render_html(f"""
         <div class="metric-panel">
             <div class="metric-title">Screening Result</div>
@@ -1046,7 +1260,7 @@ def main():
         render_html(f"""
         <div class="metric-panel">
             <div class="metric-title">Pulmonary Density Index</div>
-            <div class="metric-number">{prediction.raw_score:.3f}</div>
+            <div class="metric-number">{active_pred.raw_score:.3f}</div>
             <div class="metric-note">Cutoff: 0.300 (Normal &lt; 0.30)</div>
         </div>
         """)
@@ -1064,7 +1278,7 @@ def main():
 
     # 10. Interactive Visualizer: Specific Affected Region & Heatmaps
     st.markdown('<h3 style="font-size:1.35rem; font-weight:800; color:#0F172A; margin-top:0.75rem; margin-bottom:0.35rem;">🫁 Visual Lung Inspection</h3>', unsafe_allow_html=True)
-    st.markdown('<p style="font-size:0.92rem; color:#475569; margin-bottom:1rem;">Explore the specific areas of your chest radiograph identified during screening.</p>', unsafe_allow_html=True)
+    st.markdown(f'<p style="font-size:0.92rem; color:#475569; margin-bottom:1rem;">Viewing analysis for <b>{active_pid}</b> (<code>{active_name}</code>).</p>', unsafe_allow_html=True)
 
     tab_zones, tab_heat, tab_orig = st.tabs([
         "🎯 Specific Affected Region (Clear Highlight)",
@@ -1085,7 +1299,7 @@ def main():
 
         with col_info:
             render_html('<div class="viewer-header">📍 Detected Lung Locations</div>')
-            if prediction.is_positive and detected_zones:
+            if active_pred.is_positive and detected_zones:
                 st.write(f"**{len(detected_zones)} specific area(s) of interest** were identified where lung tissue density is elevated:")
                 for z in detected_zones:
                     render_html(f"""
@@ -1099,7 +1313,7 @@ def main():
                     and the right side shows your <b>Left Lung</b>. The highlighted boundaries indicate areas of suspected fluid accumulation or consolidation.
                 </div>
                 """)
-            elif prediction.is_positive:
+            elif active_pred.is_positive:
                 st.info("Pneumonia features detected across diffuse bilateral lung fields.")
             else:
                 render_html("""
@@ -1136,17 +1350,17 @@ def main():
         col_or1, col_or2 = st.columns([1.6, 1])
         with col_or1:
             st.image(
-                display_img,
+                active_disp,
                 caption=f"Original Uploaded Radiograph ({active_name})",
                 use_container_width=True,
             )
         with col_or2:
             render_html('<div class="viewer-header">📋 Scan Details</div>')
             st.write("**File Name:**", active_name)
-            st.write("**Scan Format:**", meta.get("format", "Radiograph"))
-            st.write("**Native Dimensions:**", meta.get("dimensions", "N/A"))
-            st.write("**Patient ID:**", meta.get("patient_id", "Anonymous"))
-            st.write("**Projection:**", meta.get("view_position", "Standard Chest PA"))
+            st.write("**Scan Format:**", active_meta.get("format", "Radiograph"))
+            st.write("**Native Dimensions:**", active_meta.get("dimensions", "N/A"))
+            st.write("**Patient ID:**", active_meta.get("patient_id", "Anonymous"))
+            st.write("**Projection:**", active_meta.get("view_position", "Standard Chest PA"))
         render_html('</div>')
 
     # 11. Personalized Doctor Advice & Visiting Recommendations

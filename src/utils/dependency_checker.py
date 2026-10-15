@@ -26,6 +26,8 @@ REQUIRED_PACKAGES: List[Dict[str, str]] = [
     {"import_name": "kaggle", "pip_name": "kaggle>=1.5.0", "description": "Kaggle Dataset API"},
     {"import_name": "kagglehub", "pip_name": "kagglehub>=0.2.0", "description": "Kaggle Hub Downloader"},
     {"import_name": "streamlit", "pip_name": "streamlit>=1.25.0", "description": "Streamlit Web Portal UI"},
+    {"import_name": "reportlab", "pip_name": "reportlab>=4.0.0", "description": "PDF Clinical Report Generator"},
+    {"import_name": "docx", "pip_name": "python-docx>=1.1.0", "description": "Word DOCX Report Generator"},
 ]
 
 

@@ -413,22 +413,73 @@ def main():
     samples_dir = DATA_DIR / "sample_images"
     
     test_cases = [
-        ("Pneumonia Sample Case", samples_dir / "pneumonia" / "pneumonia_01_square_1024x1024_severe_pneumonia.png"),
-        ("Normal Sample Case", samples_dir / "normal" / "normal_01_square_1024x1024_clear_normal.png")
+        ("Patient-PNEU-01", samples_dir / "pneumonia" / "pneumonia_01_square_1024x1024_severe_pneumonia.png"),
+        ("Patient-NORM-01", samples_dir / "normal" / "normal_01_square_1024x1024_clear_normal.png"),
+        ("Patient-PNEU-02", samples_dir / "pneumonia" / "pneumonia_02_portrait_768x1024_dense_opacity.jpg"),
+        ("Patient-NORM-02", samples_dir / "normal" / "normal_02_portrait_800x1024_healthy_normal.jpg"),
     ]
 
-    for title, path in test_cases:
+    batch_records = []
+    print("\n[Evaluating Multi-Patient Batch Scans]")
+    for pid, path in test_cases:
         if not path.exists():
-            print(f"Image not found: {path}")
             continue
         tensor, raw_disp = preprocess_image_file(path)
         pred = model_wrapper.predict(tensor)
         heatmap = gradcam.generate(tensor.to(device), model_wrapper.pneumonia_idx)
-        print(f"[{title}]")
-        print(f"  File: {path.name}")
-        print(f"  Prediction: {pred['prediction']}")
-        print(f"  Model Score: {pred['score']:.4f} (Threshold: {pred['threshold']:.2f})")
-        print(f"  Grad-CAM Activation Max: {heatmap.max():.4f}, Mean: {heatmap.mean():.4f}")
+        
+        batch_records.append({
+            "patient_id": pid,
+            "image_name": path.name,
+            "is_positive": pred["is_positive"],
+            "result_text": "POSITIVE" if pred["is_positive"] else "NEGATIVE",
+            "density_index": float(pred["score"]),
+        })
+
+    # Print 3-Column Batch Table (Patient ID with Image Name below, Screening Result, Density Index)
+    print("\n" + "=" * 80)
+    print("PATIENT SCREENING BATCH TELEMETRY (3-COLUMN TABLE)")
+    print("=" * 80)
+    print(f"{'Patient ID & Radiograph':<45} | {'Screening Result':<18} | {'Pulmonary Density Index':<25}")
+    print("-" * 80)
+    for r in batch_records:
+        res_tag = "POSITIVE" if r["is_positive"] else "NEGATIVE"
+        print(f"{r['patient_id']:<45} | {res_tag:<18} | {r['density_index']:.4f}")
+        print(f"  -> Image: {r['image_name']:<37} | {'':<18} | Cutoff: 0.300")
+        print("-" * 80)
+
+    # Export Batch Reports to PDF & DOCX
+    try:
+        if str(BASE_DIR.parent) not in sys.path:
+            sys.path.insert(0, str(BASE_DIR.parent))
+        from src.utils.report_generator import generate_pdf_report, generate_docx_report
+
+        pdf_bytes = generate_pdf_report(batch_records, title="PneumoVision Batch Screening Report")
+        pdf_out = RESULTS_DIR / "batch_screening_report.pdf"
+        pdf_out.write_bytes(pdf_bytes)
+        print(f"\n[OK] Exported PDF Report:  {pdf_out}")
+
+        docx_bytes = generate_docx_report(batch_records, title="PneumoVision Batch Screening Report")
+        docx_out = RESULTS_DIR / "batch_screening_report.docx"
+        docx_out.write_bytes(docx_bytes)
+        print(f"[OK] Exported Word Report: {docx_out}")
+    except Exception as exp_err:
+        print(f"Report export notice: {exp_err}")
+
+    # Export Summary CSV
+    df_batch = pd.DataFrame([
+        {
+            "Patient_ID": r["patient_id"],
+            "Image_Name": r["image_name"],
+            "Screening_Result": r["result_text"],
+            "Pulmonary_Density_Index": f"{r['density_index']:.4f}",
+            "Operating_Cutoff": 0.300
+        }
+        for r in batch_records
+    ])
+    csv_out = RESULTS_DIR / "batch_screening_summary.csv"
+    df_batch.to_csv(csv_out, index=False)
+    print(f"[OK] Exported Summary CSV: {csv_out}")
 
     print("\n" + "=" * 80)
     print("ALL-IN-ONE PIPELINE COMPLETED SUCCESSFULLY!")

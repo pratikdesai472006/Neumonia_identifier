@@ -1,0 +1,5 @@
+Patient_ID,Image_Name,Screening_Result,Pulmonary_Density_Index,Operating_Cutoff
+Patient-PNEU-01,pneumonia_01_square_1024x1024_severe_pneumonia.png,POSITIVE,0.9833,0.3
+Patient-NORM-01,normal_01_square_1024x1024_clear_normal.png,NEGATIVE,0.0521,0.3
+Patient-PNEU-02,pneumonia_02_portrait_768x1024_dense_opacity.jpg,POSITIVE,0.9672,0.3
+Patient-NORM-02,normal_02_portrait_800x1024_healthy_normal.jpg,NEGATIVE,0.1700,0.3
